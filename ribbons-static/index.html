@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Illusory Ribbons Static Pilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the Orbit Shadows widget's frame (tokens, band, foot, results sheet) for a static item: the front view on
+   top, the numbered pictures below as cards you tap. Made by make_demos.py from code/playground/demos/static_widget.html. */
+:root {
+  --bg: #eceef2; --surface: #ffffff; --surface-2: #f5f6f8; --ink: #141922; --muted: #586071; --line: #d4d8e0;
+  --band: #1b2130; --band-ink: #f2f4f8; --lamp: #e3a21c; --lamp-ink: #2e2000; --ok: #1b7a4c; --bad: #b3261e;
+  --font-ui: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1117; --surface: #171b23; --surface-2: #1e232d; --ink: #e9ecf2; --muted: #a3aab9; --line: #2b3140;
+    --band: #252c3b; --band-ink: #f2f4f8; --lamp: #f0b43a; --lamp-ink: #241900; --ok: #4cc38a; --bad: #ff6b61;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 16px; line-height: 1.45;
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: inherit; }
+.wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; flex-direction: column; gap: 4px; }
+.back { font-size: 14px; color: var(--muted); text-decoration: none; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font-size: 28px; line-height: 1.15; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 62ch; }
+.widget { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06); }
+.band { background: var(--band); color: var(--band-ink); padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+.band strong { font-size: 18px; line-height: 1.3; }
+.band span { font-size: 14px; opacity: 0.82; }
+.ref { padding: 14px 18px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ref img { display: block; width: min(260px, 70%); border-radius: 6px; border: 1px solid var(--line); }
+.cap { font-size: 13px; color: var(--muted); font-family: var(--font-mono); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px 18px 4px; }
+.card { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: 10px;
+        border: 3px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer;
+        font: 700 15px var(--font-ui); text-align: left; }
+.card img { display: block; width: 100%; border-radius: 5px; }
+.card[aria-pressed="true"] { border-color: var(--lamp); background: color-mix(in srgb, var(--lamp) 14%, var(--surface)); }
+.card[aria-pressed="true"]::after { content: "✓"; position: absolute; top: 10px; right: 12px; width: 26px; height: 26px;
+        border-radius: 50%; background: var(--lamp); color: var(--lamp-ink); display: grid; place-items: center; }
+.card:disabled { cursor: default; }
+/* after a wrong answer: the true views, and the impossible ones picked (each card's caption names its kind too) */
+.card.truth { border-color: var(--ok); }
+.card.miss { border-color: var(--bad); }
+.foot { display: flex; align-items: center; gap: 12px; padding: 14px 18px 16px; flex-wrap: wrap; }
+.meta { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; font-family: var(--font-mono);
+        font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.iconbtn { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 8px;
+           border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.iconbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.primary { border: 0; border-radius: 8px; padding: 12px 22px; font: 700 16px var(--font-ui); cursor: pointer;
+           background: var(--ink); color: var(--surface); }
+.primary:disabled { opacity: 0.4; cursor: default; }
+.result { margin: 8px 18px 0; padding: 10px 12px; border-radius: 8px; font-weight: 700; }
+.result.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.result.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.hint { font-size: 13px; color: var(--muted); margin: 0; padding: 0 18px 14px; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--lamp); outline-offset: 2px; }
+.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px;
+         display: flex; flex-direction: column; gap: 16px; }
+.sheet h2 { margin: 0; font-size: 22px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.stat b { font-family: var(--font-mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--muted); }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; }
+td.mono { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.pill.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.pill.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.pill.skip { color: var(--muted); background: var(--surface-2); }
+.kinds { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 14px; }
+.kinds b { color: var(--ink); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.secondary { border: 1px solid var(--line); border-radius: 8px; padding: 11px 18px; font: 700 15px var(--font-ui);
+             background: var(--surface); color: var(--ink); cursor: pointer; }
+textarea { width: 100%; min-height: 120px; font-family: var(--font-mono); font-size: 12px; background: var(--surface-2);
+           color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+@media (max-width: 420px) { h1 { font-size: 24px; } .stat b { font-size: 18px; } .grid { gap: 8px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" href="../index.html">← All demos</a>
+    <div class="eyebrow" id="eyebrow">Prototype · pilot items</div>
+    <h1 id="title">Illusory Ribbons Static</h1>
+    <p>The pilot challenges as a site would show them. Your answers stay in this page; the summary after the last one shows what you missed.</p>
+  </header>
+
+  <section class="widget" id="widget" aria-label="CAPTCHA challenge">
+    <div class="band">
+      <strong id="prompt"></strong>
+      <span id="conventions"></span>
+    </div>
+    <div class="ref">
+      <img id="front" alt="The box from the front">
+      <div class="cap">Front</div>
+    </div>
+    <div class="grid" id="grid" role="group" aria-label="Pictures to select"></div>
+    <div class="result" id="result" hidden></div>
+    <div class="foot">
+      <div class="meta">
+        <button class="iconbtn" id="skip" type="button" aria-label="Skip to a new challenge" title="New challenge">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
+        </button>
+        <span id="counter"></span>
+        <span id="timer">0:00</span>
+      </div>
+      <button class="primary" id="verify" type="button" disabled>Verify</button>
+    </div>
+    <p class="hint">Keys: 1 to 4 select, Enter verifies.</p>
+  </section>
+
+  <section class="sheet" id="sheet" hidden aria-label="Your results">
+    <h2>Your results</h2>
+    <div class="stats">
+      <div class="stat"><b id="sScore">0</b><span>challenges solved</span></div>
+      <div class="stat"><b id="sMedian">0 s</b><span>median time per challenge</span></div>
+      <div class="stat"><b id="sMissed">0</b><span>true views you left out</span></div>
+    </div>
+    <div>
+      <h3 style="margin: 0 0 8px; font-size: 16px">Impossible pictures you took for true, by kind</h3>
+      <ul class="kinds" id="kindlist"></ul>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Item</th><th>Your answer</th><th>True views</th><th>Time</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="row">
+      <button class="secondary" id="copy" type="button">Copy results</button>
+      <button class="secondary" id="again" type="button">Start again</button>
+    </div>
+    <textarea id="json" readonly hidden aria-label="Results as JSON"></textarea>
+    <p class="note">Answers are checked in this page. A real deployment checks them on its server and never sends the answer to the browser.</p>
+  </section>
+</div>
+
+<script>
+const CONFIG = {"items": [{"id": "rst_4801", "truth": [3], "cells": [{"kind": "swap", "side": "right", "swapped": [0, 1]}, {"kind": "mirror", "side": "left"}, {"kind": "true", "side": "above"}, {"kind": "swap", "side": "behind", "swapped": [0, 1]}]}, {"id": "rst_4802", "truth": [2, 3, 4], "cells": [{"kind": "mirror", "side": "right"}, {"kind": "true", "side": "left"}, {"kind": "true", "side": "behind"}, {"kind": "true", "side": "above"}]}, {"id": "rst_4803", "truth": [2, 4], "cells": [{"kind": "mirror", "side": "above"}, {"kind": "true", "side": "right"}, {"kind": "swap", "side": "left", "swapped": [0, 1]}, {"kind": "true", "side": "below"}]}, {"id": "rst_4804", "truth": [1, 3, 4], "cells": [{"kind": "true", "side": "behind"}, {"kind": "swap", "side": "below", "swapped": [2, 0]}, {"kind": "true", "side": "right"}, {"kind": "true", "side": "left"}]}, {"id": "rst_4805", "truth": [1], "cells": [{"kind": "true", "side": "left"}, {"kind": "mirror", "side": "right"}, {"kind": "swap", "side": "above", "swapped": [2, 1]}, {"kind": "mirror", "side": "below"}]}, {"id": "rst_4806", "truth": [2, 3], "cells": [{"kind": "mirror", "side": "right"}, {"kind": "true", "side": "behind"}, {"kind": "true", "side": "left"}, {"kind": "swap", "side": "below", "swapped": [2, 0]}]}], "cells": 4, "prompt": "The first picture shows a glass box with tubes, seen from the front. Select every numbered picture that shows the same box from the right, the left, above, below or behind.", "conventions": "Seen from above, the box is tipped towards you, so its front edge is at the bottom of the picture; seen from below, it is tipped away, so its front edge is at the top.", "kinds": {"mirror": "a view of the mirror image of the box", "swap": "a true view in which two tubes have traded thickness"}};
+const ITEMS = CONFIG.items, KIND_TEXT = CONFIG.kinds, N = CONFIG.cells;
+const $ = (id) => document.getElementById(id);
+$("prompt").textContent = CONFIG.prompt;
+$("conventions").textContent = CONFIG.conventions;
+$("eyebrow").textContent = "Prototype · pilot items " + ITEMS[0].id.slice(4) + " to " + ITEMS[ITEMS.length - 1].id.slice(4);
+let idx = 0, start = 0, done = false, results = [], timerId = null;
+
+function cards() { return [...document.querySelectorAll(".card")]; }
+function selected() { return cards().filter((c) => c.getAttribute("aria-pressed") === "true").map((c) => +c.dataset.n); }
+function tick() {
+  if (!start || done) return;
+  const s = Math.floor((performance.now() - start) / 1000);
+  $("timer").textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+function load(i) {
+  idx = i; done = false; start = 0;
+  const it = ITEMS[i];
+  $("counter").textContent = (i + 1) + " / " + ITEMS.length;
+  $("timer").textContent = "0:00";
+  $("result").hidden = true; $("skip").disabled = false;
+  $("verify").textContent = "Verify"; $("verify").disabled = true;
+  $("front").src = "pics/" + it.id + "/front.png";
+  $("grid").innerHTML = "";
+  let left = N + 1;
+  const ready = () => { if (--left === 0) start = performance.now(); };
+  $("front").onload = ready;
+  for (let k = 1; k <= N; k++) {
+    const b = document.createElement("button");
+    b.className = "card"; b.type = "button"; b.dataset.n = k; b.id = "c" + k;
+    b.setAttribute("aria-pressed", "false");
+    const img = document.createElement("img");
+    img.alt = "Picture " + k; img.onload = ready;
+    img.src = "pics/" + it.id + "/" + String(k).padStart(2, "0") + ".png";
+    b.append(img, document.createTextNode("Picture " + k));
+    b.addEventListener("click", () => {
+      if (done) return;
+      b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      $("verify").disabled = selected().length === 0;
+    });
+    $("grid").append(b);
+  }
+  if (i + 1 < ITEMS.length) { const pre = new Image(); pre.src = "pics/" + ITEMS[i + 1].id + "/front.png"; }
+}
+function record(answer, skipped) {
+  const it = ITEMS[idx];
+  const ms = start ? performance.now() - start : 0;
+  const ok = !skipped && answer.length === it.truth.length && answer.every((n) => it.truth.includes(n));
+  results.push({ id: it.id, answer, truth: it.truth, cells: it.cells, correct: ok, skipped, seconds: Math.round(ms / 100) / 10 });
+  return ok;
+}
+function verify() {
+  if (done) { next(); return; }
+  const ans = selected();
+  if (!ans.length) return;
+  done = true;
+  const ok = record(ans, false);
+  const it = ITEMS[idx];
+  cards().forEach((c) => {
+    c.disabled = true;
+    if (ok) return;
+    const n = +c.dataset.n, kind = it.cells[n - 1].kind;
+    c.classList.toggle("truth", it.truth.includes(n)); c.classList.toggle("miss", ans.includes(n) && !it.truth.includes(n));
+    c.lastChild.textContent = "Picture " + n + " · " + (kind === "true" ? "true view" : kind);
+  });
+  $("skip").disabled = true;
+  const r = $("result");
+  r.className = "result " + (ok ? "ok" : "bad");
+  r.textContent = ok ? "Verified. Exactly the true views." : "Not quite. True views: " + it.truth.join(", ") + ".";
+  r.hidden = false;
+  $("verify").textContent = idx + 1 < ITEMS.length ? "Next challenge" : "See results";
+}
+function next() { if (idx + 1 < ITEMS.length) load(idx + 1); else finish(); }
+function finish() {
+  $("widget").hidden = true;
+  const solved = results.filter((r) => r.correct).length;
+  const times = results.filter((r) => !r.skipped).map((r) => r.seconds).sort((a, b) => a - b);
+  const median = times.length ? (times.length % 2 ? times[(times.length - 1) / 2] : (times[times.length / 2 - 1] + times[times.length / 2]) / 2) : 0;
+  const kinds = Object.fromEntries(Object.keys(KIND_TEXT).map((k) => [k, [0, 0]]));
+  let missed = 0;
+  results.forEach((r) => {
+    r.cells.forEach((c, k) => {
+      if (c.kind === "true") { if (!r.skipped && !r.answer.includes(k + 1)) missed++; return; }
+      kinds[c.kind][1]++; if (r.answer.includes(k + 1)) kinds[c.kind][0]++;
+    });
+  });
+  $("sScore").textContent = solved + "/" + results.length;
+  $("sMedian").textContent = median.toFixed(1) + " s";
+  $("sMissed").textContent = missed;
+  $("kindlist").innerHTML = Object.entries(kinds).map(([k, [a, n]]) =>
+    "<li><b>" + a + " of " + n + "</b> " + k + ": " + KIND_TEXT[k] + "</li>").join("");
+  $("rows").innerHTML = results.map((r) => {
+    const views = r.cells.map((c, k) => c.kind === "true" ? (k + 1) + " " + c.side : null).filter(Boolean).join(", ");
+    const pill = r.skipped ? '<span class="pill skip">skipped</span>' : r.correct ? '<span class="pill ok">solved</span>' : '<span class="pill bad">missed</span>';
+    return "<tr><td class=\"mono\">" + r.id.slice(4) + "</td><td class=\"mono\">" + (r.answer.join(", ") || "–") +
+      "</td><td>" + views + "</td><td class=\"mono\">" + r.seconds.toFixed(1) + " s</td><td>" + pill + "</td></tr>";
+  }).join("");
+  $("json").value = JSON.stringify({ finished: new Date().toISOString(), results }, null, 1);
+  $("sheet").hidden = false;
+  $("sheet").scrollIntoView({ block: "start" });
+}
+$("verify").addEventListener("click", verify);
+$("skip").addEventListener("click", () => { if (!done) { record([], true); next(); } });
+$("copy").addEventListener("click", () => {
+  const text = $("json").value;
+  const show = () => { $("json").hidden = false; $("json").select(); $("copy").textContent = "Select and copy the text below"; };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => { $("copy").textContent = "Copied"; }, show);
+  } else show();
+});
+$("again").addEventListener("click", () => {
+  results = []; $("sheet").hidden = true; $("json").hidden = true; $("copy").textContent = "Copy results";
+  $("widget").hidden = false; load(0);
+});
+document.addEventListener("keydown", (e) => {
+  if ($("widget").hidden || e.target.tagName === "TEXTAREA") return;
+  const k = +e.key;
+  if (k >= 1 && k <= N) { $("c" + k).click(); e.preventDefault(); }
+  else if (e.key === "Enter" && !$("verify").disabled) { verify(); e.preventDefault(); }
+});
+setInterval(tick, 250);
+load(0);
+</script>
+</body>
+</html>

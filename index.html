@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pilot CAPTCHAs</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #eceef2; --surface: #ffffff; --surface-2: #f5f6f8; --ink: #141922; --muted: #586071; --line: #d4d8e0;
+  --band: #1b2130; --band-ink: #f2f4f8; --lamp: #e3a21c; --lamp-ink: #2e2000;
+  --font-ui: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0e1117; --surface: #171b23; --surface-2: #1e232d; --ink: #e9ecf2; --muted: #a3aab9; --line: #2b3140;
+          --band: #252c3b; --band-ink: #f2f4f8; --lamp: #f0b43a; --lamp-ink: #241900; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 16px;
+       line-height: 1.45; padding-block: 32px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px));
+       padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+header { display: flex; flex-direction: column; gap: 4px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+           color: var(--muted); }
+h1 { margin: 0; font-size: 32px; line-height: 1.1; }
+h2 { margin: 0; font-size: 20px; }
+header p, .lead { margin: 0; color: var(--muted); max-width: 70ch; }
+section { display: flex; flex-direction: column; gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+        display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); }
+.card img.poster { display: block; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.body { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.body h3 { margin: 0; font-size: 22px; }
+.body p { margin: 0; color: var(--muted); }
+.task { background: var(--band); color: var(--band-ink); border-radius: 8px; padding: 10px 12px; font-weight: 700; }
+.links { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { display: inline-block; text-decoration: none; border-radius: 8px; padding: 10px 18px; font-weight: 700;
+       background: var(--ink); color: var(--surface); }
+.small { font-size: 14px; color: var(--muted); }
+.gifs { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; padding: 0 18px 18px; }
+.gif { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.gif img { display: block; width: 100%; border-radius: 6px; background: #000; }
+details { font-size: 14px; color: var(--muted); }
+summary { cursor: pointer; }
+details b { color: var(--ink); }
+.docs { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.docs a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 10px 16px;
+          border-top: 1px solid var(--line); text-decoration: none; }
+.docs a:first-child { border-top: 0; }
+.docs a:hover span:first-child { text-decoration: underline; }
+.docs .date { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+a:focus-visible, summary:focus-visible { outline: 3px solid var(--lamp); outline-offset: 2px; }
+@media (max-width: 700px) { .card { grid-template-columns: 1fr; } .card img.poster { height: auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">MSc thesis · Can You See What AI Can't?</div>
+    <h1>Pilot CAPTCHAs</h1>
+    <p>Our 13 pilot types, 6 example items each, played as a site would show them, with a timer. After a wrong
+    answer the page marks the right one; at the end it shows a summary with Copy results (JSON). These are each type's
+    example items, not the ones the models are asked.</p>
+  </header>
+  <section>
+    <article class="card">
+      <a href="orbit-shadows/index.html"><img class="poster" src="orbit-shadows/poster.jpg" alt="Objects on a table, a lamp on a post"></a>
+      <div class="body">
+        <h3>Orbit Shadows</h3>
+        <div class="task">Select every object whose shadow does not fit the lamp.</div>
+        <p>A camera swings round a table with numbered objects and a lamp. One to three shadows are wrong.</p>
+        <div class="links"><a class="btn" href="orbit-shadows/index.html">Play</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="ribbons-3d/index.html"><img class="poster" src="ribbons-3d/poster.jpg" alt="Grey tubes that cross each other"></a>
+      <div class="body">
+        <h3>Illusory Ribbons 3D</h3>
+        <div class="task">How many separate closed loops are there? Each loop is one tube that closes on itself; the loops pass in front of and behind each other but never touch.</div>
+        <p>Grey tubes that cross in every view; the camera swings round them.</p>
+        <div class="links"><a class="btn" href="ribbons-3d/index.html">Play</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="ribbons-static/index.html"><img class="poster" src="ribbons-static/poster.jpg" alt="A glass box with three tubes, seen from the front"></a>
+      <div class="body">
+        <h3>Illusory Ribbons Static</h3>
+        <div class="task">The first picture shows a glass box with tubes, seen from the front. Select every numbered picture that shows the same box from the right, the left, above, below or behind.</div>
+        <p>One front view of tubes in a box, 4 candidate views: the wrong ones show the mirrored box or two tubes with traded thickness. No motion.</p>
+        <div class="links"><a class="btn" href="ribbons-static/index.html">Play</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="motion-shadows-b/index.html"><img class="poster" src="motion-shadows-b/poster.jpg" alt="Objects on a turntable, two groups of shadows"></a>
+      <div class="body">
+        <h3>Motion Shadows A to D</h3>
+        <div class="task">Select every object whose shadow turns with the table.</div>
+        <p>Two hidden lights, each object lit by one. One frame shows two groups of shadows that both look right; only the motion tells which light moves. A: The camera swings round the table; one hidden light stays in the room, the other travels with the camera. B: The camera stands still and a turntable swings; one hidden light stays in the room, the other turns with the table. C: As B, but the room light moves too, the other way round, so no shadow keeps its direction on the screen. D: The camera swings as in A; one hidden light stays in the room, the other drifts through it, with the camera or against it, so every shadow turns on the screen.</p>
+        <div class="links"><a class="btn" href="motion-shadows-a/index.html">Play A</a><a class="small" href="motion-shadows-b/index.html">Play B</a><a class="small" href="motion-shadows-c/index.html">Play C</a><a class="small" href="motion-shadows-d/index.html">Play D</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="shadow-depth-c/index.html"><img class="poster" src="shadow-depth-c/poster.jpg" alt="Five numbered balls float in a room, their shadows on the floor"></a>
+      <div class="body">
+        <h3>Shadow Depth A to C</h3>
+        <div class="task">Which ball is the biggest in real size?</div>
+        <p>Five balls float in a room; only their shadows on the floor give their places. A: Which ball is nearest to you? B: Select every ball that moves straight up and down.</p>
+        <div class="links"><a class="btn" href="shadow-depth-c/index.html">Play C</a><a class="small" href="shadow-depth-a/index.html">Play A</a><a class="small" href="shadow-depth-b/index.html">Play B</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="tunnel-depth/index.html"><img class="poster" src="tunnel-depth/poster.jpg" alt="Five numbered balls on the walls of a bent tiled tunnel"></a>
+      <div class="body">
+        <h3>Tunnel Depth</h3>
+        <div class="task">Which ball is nearest to you?</div>
+        <p>Five balls rest anywhere round the inside of a bent tiled tube, so height in the picture and size say nothing; only the tiles where a ball rests say how far it is.</p>
+        <div class="links"><a class="btn" href="tunnel-depth/index.html">Play</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="dot-layers/index.html"><img class="poster" src="dot-layers/poster.jpg" alt="A field of grey dots"></a>
+      <div class="body">
+        <h3>Dot Layers</h3>
+        <div class="task">Which shape is in front, not covered by any other shape?</div>
+        <p>Five shapes made only of dots slide over each other; every single frame is plain dots. Only the motion shows the shapes and which covers which.</p>
+        <div class="links"><a class="btn" href="dot-layers/index.html">Play</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="photo-motion/index.html"><img class="poster" src="photo-motion/poster.jpg" alt="A camera swings round a desk with five numbered balls"></a>
+      <div class="body">
+        <h3>Photo Motion</h3>
+        <div class="task">Select every object whose shadow fits a light that stays still in the room.</div>
+        <p>Motion Shadows D along a real camera path, inserted into a real scene (TUM RGB-D).</p>
+        <div class="links"><a class="btn" href="photo-motion/index.html">Play</a></div>
+      </div>
+    </article>
+  </section>
+</div>
+</body>
+</html>
