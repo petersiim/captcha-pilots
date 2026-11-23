@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Which stick is free? Pilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Which stick is free? (18 Nov): the grid widget's page (ribbons_grid_widget.html: tokens, band, foot, results sheet)
+   for one photo of pick-up sticks. The page draws the marks itself on the plain photo (layout): each marked stick's
+   number as a round button beyond the stick's end, 34 px (28 px on a phone; WCAG 2.5.8 asks 24), and a thin white
+   line from it onto the stick. Numbers baked into the picture, as the models get them, shrink to 9 px on a phone.
+   Buttons that would touch move further out along the stick's line, as in mikado_web.py. The same numbers are
+   buttons below. The answer is a set of numbers. Made by make_demos.py from code/playground/demos/mikado_widget.html. */
+:root {
+  --bg: #eceef2; --surface: #ffffff; --surface-2: #f5f6f8; --ink: #141922; --muted: #586071; --line: #d4d8e0;
+  --band: #1b2130; --band-ink: #f2f4f8; --lamp: #e3a21c; --lamp-ink: #2e2000; --ok: #1b7a4c; --bad: #b3261e;
+  --font-ui: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1117; --surface: #171b23; --surface-2: #1e232d; --ink: #e9ecf2; --muted: #a3aab9; --line: #2b3140;
+    --band: #252c3b; --band-ink: #f2f4f8; --lamp: #f0b43a; --lamp-ink: #241900; --ok: #4cc38a; --bad: #ff6b61;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 16px; line-height: 1.45;
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: inherit; }
+.wrap { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; flex-direction: column; gap: 4px; }
+.back { font-size: 14px; color: var(--muted); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font-size: 28px; line-height: 1.15; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 62ch; }
+.widget { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06); }
+.band { background: var(--band); color: var(--band-ink); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+.band strong { font-size: 19px; line-height: 1.25; text-wrap: balance; }
+.band span { font-size: 14px; opacity: 0.82; }
+.player { position: relative; background: #000; line-height: 0; --disc: 34px; }
+.player img { display: block; width: 100%; height: auto; }
+.player svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.player polyline { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.player .rim { stroke: #141414; stroke-width: 4px; }
+.player .line { stroke: #ffffff; stroke-width: 2px; }
+.player .loading { position: absolute; inset: 0; display: grid; place-items: center; color: #cfd4de; line-height: 1.4;
+                   font-family: var(--font-mono); font-size: 13px; padding: 16px; text-align: center; z-index: 2; }
+/* a marked stick's number: a white disc with a dark rim on any photo, in both themes; a tapped one in the lamp's colour */
+.spot { position: absolute; width: var(--disc); height: var(--disc); transform: translate(-50%, -50%);
+        border-radius: 50%; border: 2px solid #141414; background: #ffffff; color: #0a0a0a; cursor: pointer;
+        padding: 0; display: grid; place-items: center; font: 700 calc(var(--disc) * 0.5) / 1 var(--font-ui); }
+.spot[aria-pressed="true"] { background: var(--lamp); color: var(--lamp-ink); box-shadow: 0 0 0 3px var(--lamp); }
+.spot:disabled { cursor: default; }
+.spot.truth { box-shadow: 0 0 0 4px var(--ok); }
+.spot.miss { box-shadow: 0 0 0 4px var(--bad); }
+.credit { font-size: 12px; color: var(--muted); margin: 0; padding: 6px 18px 0; }
+.answer { padding: 12px 18px 4px; display: flex; flex-direction: column; gap: 10px; }
+.answer .lab { font-size: 14px; color: var(--muted); }
+.nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+.num { min-height: 52px; border-radius: 8px; border: 2px solid var(--line); background: var(--surface);
+       color: var(--ink); font: 700 22px var(--font-ui); cursor: pointer; }
+.num[aria-pressed="true"] { background: var(--lamp); border-color: var(--lamp); color: var(--lamp-ink); }
+.num:disabled { cursor: default; opacity: 0.85; }
+.num.truth { border-color: var(--ok); box-shadow: inset 0 0 0 2px var(--ok); opacity: 1; }
+.num.miss { border-color: var(--bad); }
+.foot { display: flex; align-items: center; gap: 12px; padding: 14px 18px 16px; flex-wrap: wrap; }
+.meta { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; font-family: var(--font-mono);
+        font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.iconbtn { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 8px;
+           border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.iconbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.primary { border: 0; border-radius: 8px; padding: 12px 22px; font: 700 16px var(--font-ui); cursor: pointer;
+           background: var(--ink); color: var(--surface); }
+.primary:disabled { opacity: 0.4; cursor: default; }
+.result { margin: 4px 18px 0; padding: 10px 12px; border-radius: 8px; font-weight: 700; }
+.result.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.result.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.hint { font-size: 13px; color: var(--muted); margin: 0; padding: 0 18px 14px; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--lamp); outline-offset: 2px; }
+.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px;
+         display: flex; flex-direction: column; gap: 16px; }
+.sheet h2 { margin: 0; font-size: 22px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.stat b { font-family: var(--font-mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--muted); }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; }
+td.mono { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.pill.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.pill.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.pill.skip { color: var(--muted); background: var(--surface-2); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.secondary { border: 1px solid var(--line); border-radius: 8px; padding: 11px 18px; font: 700 15px var(--font-ui);
+             background: var(--surface); color: var(--ink); cursor: pointer; }
+textarea { width: 100%; min-height: 120px; font-family: var(--font-mono); font-size: 12px; background: var(--surface-2);
+           color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+@media (max-width: 420px) {
+  h1 { font-size: 24px; }
+  .stat b { font-size: 18px; }
+  .num { min-height: 48px; }
+  .player { --disc: 28px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" href="../index.html">← All demos</a>
+    <div class="eyebrow" id="eyebrow">Prototype · pilot items</div>
+    <h1 id="title">Which stick is free?</h1>
+    <p>The pilot challenges as a site would show them. Your answers stay in this page; the summary after the last one shows what you missed.</p>
+  </header>
+
+  <section class="widget" id="widget" aria-label="CAPTCHA challenge">
+    <div class="band">
+      <strong id="prompt"></strong>
+      <span id="instruction"></span>
+    </div>
+    <div class="player" id="player">
+      <img id="photo" alt="A pile of pick-up sticks; some sticks carry a number at one end">
+      <svg id="lines" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div class="loading" id="loading">Loading challenge…</div>
+    </div>
+    <p class="credit" id="credit"></p>
+    <div class="answer">
+      <div class="lab" id="numlab">Sticks you select</div>
+      <div class="nums" role="group" aria-labelledby="numlab" id="nums"></div>
+    </div>
+    <div class="result" id="result" hidden></div>
+    <div class="foot">
+      <div class="meta">
+        <button class="iconbtn" id="skip" type="button" aria-label="Skip to a new challenge" title="New challenge">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
+        </button>
+        <span id="counter"></span>
+        <span id="timer">0:00</span>
+      </div>
+      <button class="primary" id="verify" type="button" disabled>Verify</button>
+    </div>
+    <p class="hint" id="hint">Keys: 1 to 9 select, Enter verifies.</p>
+  </section>
+
+  <section class="sheet" id="sheet" hidden aria-label="Your results">
+    <h2>Your results</h2>
+    <div class="stats">
+      <div class="stat"><b id="sScore">0</b><span>challenges solved</span></div>
+      <div class="stat"><b id="sMedian">0 s</b><span>median time per challenge</span></div>
+      <div class="stat"><b id="sMiss">0 / 0</b><span>sticks missed / picked wrongly</span></div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Item</th><th>Marked</th><th>Your answer</th><th>Free</th><th>Time</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="row">
+      <button class="secondary" id="copy" type="button">Copy results</button>
+      <button class="secondary" id="again" type="button">Start again</button>
+    </div>
+    <textarea id="json" readonly hidden aria-label="Results as JSON"></textarea>
+    <p class="note">Answers are checked in this page. A real deployment checks them on its server and never sends the answer to the browser.</p>
+  </section>
+</div>
+
+<script>
+const CONFIG = {"items": [{"id": "mkw_01", "truth": [6], "w": 1280, "h": 960, "marks": [{"x": 991.3, "y": 948.0, "ux": -0.3304, "uy": -0.9438, "len": 57.6}, {"x": 1012.7, "y": 939.3, "ux": -0.6516, "uy": -0.7586, "len": 57.6}, {"x": 2.0, "y": 578.0, "ux": 0.9899, "uy": -0.1414, "len": 57.6}, {"x": 1199.3, "y": 942.0, "ux": -0.8092, "uy": -0.5876, "len": 57.6}, {"x": 924.0, "y": 302.7, "ux": -0.6534, "uy": 0.757, "len": 57.6}, {"x": 311.3, "y": 242.0, "ux": 0.9004, "uy": 0.435, "len": 57.6}], "credit": "Photo: Chrisbal, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Bierki_technique.jpg; numbers and marks added."}, {"id": "mkw_02", "truth": [3, 7], "w": 1280, "h": 935, "marks": [{"x": 1198.0, "y": 196.7, "ux": -0.9908, "uy": 0.1352, "len": 57.6}, {"x": 479.3, "y": 626.7, "ux": 0.4645, "uy": -0.8856, "len": 57.6}, {"x": 1188.0, "y": 718.7, "ux": -0.6746, "uy": -0.7382, "len": 57.6}, {"x": 110.7, "y": 503.3, "ux": 0.7468, "uy": -0.665, "len": 57.6}, {"x": 1173.3, "y": 192.0, "ux": -0.997, "uy": 0.0778, "len": 57.6}, {"x": 316.0, "y": 669.3, "ux": 0.5944, "uy": -0.8041, "len": 57.6}, {"x": 1140.7, "y": 133.3, "ux": -0.9727, "uy": -0.2319, "len": 57.6}], "credit": "Photo: Koefbac, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Bierki_w_Poznaniu_-_sierpie\u0144_2021.jpg; numbers and marks added."}, {"id": "mkw_03", "truth": [3, 6], "w": 1280, "h": 960, "marks": [{"x": 502.7, "y": 129.3, "ux": -0.0679, "uy": 0.9977, "len": 57.6}, {"x": 1116.0, "y": 701.3, "ux": -0.9365, "uy": -0.3508, "len": 57.6}, {"x": 970.0, "y": 873.3, "ux": -0.5924, "uy": -0.8057, "len": 57.6}, {"x": 43.3, "y": 658.0, "ux": 0.9624, "uy": -0.2716, "len": 57.6}, {"x": 652.7, "y": 130.7, "ux": -0.4634, "uy": 0.8862, "len": 57.6}, {"x": 1120.7, "y": 298.0, "ux": -0.9134, "uy": 0.4071, "len": 57.6}, {"x": 52.0, "y": 532.0, "ux": 0.9973, "uy": -0.0737, "len": 57.6}], "credit": "Photo: Olos88, Public domain, https://commons.wikimedia.org/wiki/File:Bierki.JPG; numbers and marks added."}, {"id": "mkw_04", "truth": [3, 4], "w": 960, "h": 1280, "marks": [{"x": 499.0, "y": 1147.0, "ux": -0.693, "uy": -0.721, "len": 57.6}, {"x": 168.0, "y": 437.5, "ux": 0.7499, "uy": 0.6616, "len": 57.6}, {"x": 715.0, "y": 404.0, "ux": -0.999, "uy": 0.0456, "len": 57.6}, {"x": 7.5, "y": 762.0, "ux": 0.9205, "uy": -0.3908, "len": 57.6}, {"x": 592.0, "y": 1100.0, "ux": -0.7274, "uy": -0.6862, "len": 57.6}, {"x": 619.0, "y": 890.5, "ux": -0.6176, "uy": -0.7865, "len": 57.6}, {"x": 595.0, "y": 302.5, "ux": 0.3759, "uy": 0.9267, "len": 57.6}], "credit": "Photo: Skimel, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Large_size_mikado_game_on_a_table_(1).jpg; numbers and marks added."}, {"id": "mkw_05", "truth": [1], "w": 1280, "h": 960, "marks": [{"x": 6.0, "y": 347.3, "ux": 0.9876, "uy": -0.1571, "len": 57.6}, {"x": 1270.7, "y": 404.7, "ux": -0.9265, "uy": -0.3764, "len": 57.6}, {"x": 640.0, "y": 946.7, "ux": -0.6503, "uy": -0.7597, "len": 57.6}, {"x": 215.3, "y": 199.3, "ux": 0.7913, "uy": 0.6114, "len": 57.6}, {"x": 763.3, "y": 953.3, "ux": -0.6181, "uy": -0.7861, "len": 57.6}, {"x": 1038.7, "y": 20.0, "ux": -0.9649, "uy": 0.2626, "len": 57.6}], "credit": "Photo: Skimel, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Large_size_mikado_game_on_a_table_(2).jpg; numbers and marks added."}, {"id": "mkw_06", "truth": [1, 3], "w": 1280, "h": 960, "marks": [{"x": 0.7, "y": 933.3, "ux": 0.9331, "uy": -0.3595, "len": 57.6}, {"x": 672.7, "y": 950.7, "ux": -0.3946, "uy": -0.9188, "len": 57.6}, {"x": 3.3, "y": 447.3, "ux": 0.9978, "uy": -0.0659, "len": 57.6}, {"x": 4.7, "y": 655.3, "ux": 0.9438, "uy": -0.3304, "len": 57.6}, {"x": 1274.0, "y": 590.7, "ux": -0.9576, "uy": -0.2879, "len": 57.6}, {"x": 1266.7, "y": 718.7, "ux": -0.8255, "uy": -0.5644, "len": 57.6}], "credit": "Photo: Skimel, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Large_size_mikado_game_on_a_table_(3).jpg; numbers and marks added."}, {"id": "mkw_07", "truth": [1, 2, 3], "w": 1280, "h": 720, "marks": [{"x": 1279.3, "y": 468.7, "ux": -0.9105, "uy": -0.4135, "len": 57.6}, {"x": 617.3, "y": 538.7, "ux": 0.3892, "uy": -0.9211, "len": 57.6}, {"x": 195.3, "y": 52.7, "ux": 0.9854, "uy": 0.1701, "len": 57.6}, {"x": 472.0, "y": 252.0, "ux": 0.9294, "uy": -0.369, "len": 57.6}], "credit": "Photo: Mokkie, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Pick_up_sticks_1.JPG; numbers and marks added."}, {"id": "mkw_08", "truth": [2, 5], "w": 640, "h": 499, "marks": [{"x": 142.0, "y": 480.0, "ux": 0.6519, "uy": -0.7583, "len": 28.8}, {"x": 228.0, "y": 35.0, "ux": 0.1621, "uy": 0.9868, "len": 28.8}, {"x": 493.0, "y": 176.0, "ux": -0.9258, "uy": 0.378, "len": 28.8}, {"x": 380.0, "y": 38.0, "ux": -0.4761, "uy": 0.8794, "len": 28.8}, {"x": 396.0, "y": 462.0, "ux": -0.1078, "uy": -0.9942, "len": 28.8}], "credit": "Photo: photo taken by: de:User:Martin Sommerfeld, CC BY-SA 3.0, https://commons.wikimedia.org/wiki/File:Spiel_Mikado.jpg; numbers and marks added."}, {"id": "mkw_09", "truth": [2], "w": 1024, "h": 576, "marks": [{"x": 1014.0, "y": 514.0, "ux": -0.9946, "uy": 0.1035, "len": 46.1}, {"x": 156.0, "y": 262.0, "ux": 0.9859, "uy": 0.1674, "len": 46.1}, {"x": 140.0, "y": 499.0, "ux": 0.9942, "uy": -0.1075, "len": 46.1}, {"x": 1001.0, "y": 377.0, "ux": -0.9493, "uy": 0.3143, "len": 46.1}, {"x": 510.0, "y": 16.0, "ux": 0.7952, "uy": 0.6063, "len": 46.1}], "credit": "Photo: Max Braun, CC BY-SA 2.0, https://www.flickr.com/photos/72645106@N00/3202748964; numbers and marks added."}, {"id": "mkw_11", "truth": [2, 3, 4, 5], "w": 1024, "h": 669, "marks": [{"x": 792.0, "y": 3.0, "ux": -0.9131, "uy": 0.4077, "len": 46.1}, {"x": 724.0, "y": 659.0, "ux": -0.7848, "uy": -0.6198, "len": 46.1}, {"x": 630.0, "y": 7.0, "ux": -0.6846, "uy": 0.7289, "len": 46.1}, {"x": 668.0, "y": 657.0, "ux": -0.7498, "uy": -0.6616, "len": 46.1}, {"x": 1017.0, "y": 335.0, "ux": -0.9175, "uy": 0.3977, "len": 46.1}, {"x": 160.0, "y": 285.0, "ux": 0.7145, "uy": 0.6996, "len": 46.1}, {"x": 1019.0, "y": 583.0, "ux": -0.7919, "uy": -0.6106, "len": 46.1}], "credit": "Photo: docoverachiever, CC BY 2.0, https://www.flickr.com/photos/90692748@N04/46494188905; numbers and marks added."}], "text": {"title": "Which stick is free?", "prompt": "Tap every numbered stick you could lift without moving another stick.", "instruction": "A stick is free when no other stick lies on it. Each number sits at one end of its stick. Tap the numbers in the photo or below, then press Verify."}};
+const ITEMS = CONFIG.items, TEXT = CONFIG.text || {};
+const $ = (id) => document.getElementById(id);
+if (TEXT.title) { document.title = TEXT.title + " Pilot"; $("title").textContent = TEXT.title; }
+$("prompt").textContent = TEXT.prompt;
+$("instruction").textContent = TEXT.instruction;
+const shortId = (id) => id.slice(id.indexOf("_") + 1);
+$("eyebrow").textContent = "Prototype · pilot items " + shortId(ITEMS[0].id) + " to " + shortId(ITEMS[ITEMS.length - 1].id);
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let idx = 0, start = 0, done = false, results = [];
+const both = (n) => document.querySelectorAll('.num[data-n="' + n + '"], .spot[data-n="' + n + '"]');
+
+function selected() {
+  return [...document.querySelectorAll(".num")].filter((b) => b.getAttribute("aria-pressed") === "true")
+    .map((b) => +b.dataset.n);
+}
+function toggle(n) {
+  if (done || !$("n" + n)) return;
+  const on = $("n" + n).getAttribute("aria-pressed") !== "true";
+  both(n).forEach((b) => b.setAttribute("aria-pressed", on ? "true" : "false"));
+  $("verify").disabled = selected().length === 0;
+}
+// The marks at the photo's shown size: each number's disc beyond its stick's end (m.x, m.y; the stick runs on in
+// m.ux, m.uy), kept inside the photo; one that would touch an earlier disc moves further out along the stick's line
+// (mikado_web.py's marks). A white line from the disc to the end and a little way onto the stick (at least 20 px).
+function layout() {
+  const it = ITEMS[idx], box = $("player").getBoundingClientRect();
+  if (!box.width) return;
+  const s = box.width / it.w, R = parseFloat(getComputedStyle($("player")).getPropertyValue("--disc")) / 2;
+  const placed = [];
+  let lines = "";
+  document.querySelectorAll(".spot").forEach((b, k) => {
+    const m = it.marks[k], ex = m.x * s, ey = m.y * s;
+    let c;
+    for (let step = 0; step < 7; step++) {
+      const d = R * (1.3 + 0.9 * step);
+      c = [Math.min(Math.max(ex - m.ux * d, R + 2), box.width - R - 2),
+           Math.min(Math.max(ey - m.uy * d, R + 2), box.height - R - 2)];
+      if (placed.every((q) => Math.hypot(c[0] - q[0], c[1] - q[1]) > 2 * R + 2)) break;
+    }
+    placed.push(c);
+    b.style.left = c[0] + "px"; b.style.top = c[1] + "px";
+    const len = Math.max(m.len, 20 / s);
+    const pts = [c[0] / s, c[1] / s, m.x, m.y, m.x + m.ux * len, m.y + m.uy * len].map((v) => v.toFixed(1)).join(" ");
+    lines += '<polyline class="rim" points="' + pts + '"/><polyline class="line" points="' + pts + '"/>';
+  });
+  $("lines").setAttribute("viewBox", "0 0 " + it.w + " " + it.h);
+  $("lines").innerHTML = lines;
+}
+function load(i) {
+  idx = i; done = false; start = 0;
+  const it = ITEMS[i];
+  document.querySelectorAll(".spot").forEach((b) => b.remove());
+  // the item's sticks: a numbered disc in the photo for each (placed by layout) and a button below
+  it.marks.forEach((_, k) => {
+    const b = document.createElement("button");
+    b.className = "spot"; b.type = "button"; b.dataset.n = k + 1; b.setAttribute("aria-pressed", "false");
+    b.setAttribute("aria-label", "Stick " + (k + 1)); b.textContent = k + 1;
+    b.addEventListener("click", () => toggle(k + 1));
+    $("player").appendChild(b);
+  });
+  $("nums").innerHTML = it.marks.map((_, k) =>
+    '<button class="num" type="button" data-n="' + (k + 1) + '" aria-pressed="false" id="n' + (k + 1) + '">' + (k + 1) + "</button>").join("");
+  document.querySelectorAll(".num").forEach((b) => b.addEventListener("click", () => toggle(+b.dataset.n)));
+  $("credit").textContent = it.credit || "";
+  $("verify").textContent = "Verify"; $("verify").disabled = true;
+  $("result").hidden = true; $("skip").disabled = false;
+  $("counter").textContent = (i + 1) + " / " + ITEMS.length;
+  $("timer").textContent = "0:00";
+  $("hint").textContent = "Keys: 1 to " + Math.min(9, it.marks.length) + " select, Enter verifies.";
+  const img = $("photo");
+  $("player").style.aspectRatio = it.w + " / " + it.h;
+  $("loading").textContent = "Loading challenge…"; $("loading").hidden = false;
+  layout();
+  img.onload = () => {
+    $("loading").hidden = true; start = performance.now(); layout();
+    if (i + 1 < ITEMS.length) { const pre = new Image(); pre.src = "sprites/" + ITEMS[i + 1].id + ".jpg"; }
+  };
+  img.onerror = () => { $("loading").textContent = "This challenge did not load. Press the new-challenge button to skip it."; };
+  img.src = "sprites/" + it.id + ".jpg";
+}
+function tick() {
+  if (start && !done) {
+    const s = Math.floor((performance.now() - start) / 1000);
+    $("timer").textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+  requestAnimationFrame(tick);
+}
+function record(answer, skipped) {
+  const it = ITEMS[idx];
+  const ms = start ? performance.now() - start : 0;
+  const ok = !skipped && answer.length === it.truth.length && answer.every((n) => it.truth.includes(n));
+  results.push({ id: it.id, marked: it.marks.length, answer, truth: it.truth, correct: ok, skipped,
+                 seconds: Math.round(ms / 100) / 10 });
+  return ok;
+}
+function verify() {
+  if (done) { next(); return; }
+  const ans = selected();
+  if (!ans.length) return;
+  done = true;
+  const ok = record(ans, false);
+  const it = ITEMS[idx];
+  document.querySelectorAll(".num, .spot").forEach((b) => {
+    b.disabled = true;
+    if (ok) return;
+    const n = +b.dataset.n;
+    b.classList.toggle("truth", it.truth.includes(n)); b.classList.toggle("miss", ans.includes(n) && !it.truth.includes(n));
+  });
+  $("skip").disabled = true;
+  const r = $("result");
+  r.className = "result " + (ok ? "ok" : "bad");
+  r.textContent = ok ? "Verified." : "Not quite. Free sticks: " + it.truth.join(", ") + ".";
+  r.hidden = false;
+  $("verify").textContent = idx + 1 < ITEMS.length ? "Next challenge" : "See results";
+}
+function next() {
+  if (idx + 1 < ITEMS.length) load(idx + 1); else finish();
+}
+function finish() {
+  $("widget").hidden = true;
+  const answered = results.filter((r) => !r.skipped);
+  const solved = results.filter((r) => r.correct).length;
+  const times = answered.map((r) => r.seconds).sort((a, b) => a - b);
+  const median = times.length ? (times.length % 2 ? times[(times.length - 1) / 2] : (times[times.length / 2 - 1] + times[times.length / 2]) / 2) : 0;
+  let missed = 0, wrong = 0;
+  answered.forEach((r) => {
+    missed += r.truth.filter((n) => !r.answer.includes(n)).length;
+    wrong += r.answer.filter((n) => !r.truth.includes(n)).length;
+  });
+  $("sScore").textContent = solved + "/" + results.length;
+  $("sMedian").textContent = median.toFixed(1) + " s";
+  $("sMiss").textContent = missed + " / " + wrong;
+  $("rows").innerHTML = results.map((r) => {
+    const pill = r.skipped ? '<span class="pill skip">skipped</span>' : r.correct ? '<span class="pill ok">solved</span>' : '<span class="pill bad">missed</span>';
+    return "<tr><td class=\"mono\">" + shortId(r.id) + "</td><td class=\"mono\">" + r.marked + "</td><td class=\"mono\">" +
+      (r.answer.join(", ") || "–") + "</td><td class=\"mono\">" + r.truth.join(", ") + "</td><td class=\"mono\">" +
+      r.seconds.toFixed(1) + " s</td><td>" + pill + "</td></tr>";
+  }).join("");
+  $("json").value = JSON.stringify({ finished: new Date().toISOString(), results }, null, 1);
+  $("sheet").hidden = false;
+  $("sheet").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+}
+
+$("verify").addEventListener("click", verify);
+window.addEventListener("resize", layout);
+$("skip").addEventListener("click", () => { if (!done) { record([], true); next(); } });
+$("copy").addEventListener("click", () => {
+  const text = $("json").value;
+  const show = () => { $("json").hidden = false; $("json").select(); $("copy").textContent = "Select and copy the text below"; };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => { $("copy").textContent = "Copied"; }, show);
+  } else show();
+});
+$("again").addEventListener("click", () => {
+  results = []; $("sheet").hidden = true; $("json").hidden = true; $("copy").textContent = "Copy results";
+  $("widget").hidden = false; load(0);
+});
+document.addEventListener("keydown", (e) => {
+  if ($("widget").hidden || e.target.tagName === "TEXTAREA") return;
+  if (/^[1-9]$/.test(e.key)) { toggle(+e.key); e.preventDefault(); }
+  else if (e.key === "Enter" && !$("verify").disabled) { verify(); e.preventDefault(); }
+});
+
+load(0);
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

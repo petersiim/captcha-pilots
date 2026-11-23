@@ -115,14 +115,14 @@ textarea { width: 100%; min-height: 120px; font-family: var(--font-mono); font-s
   <header>
     <a class="back" href="../index.html">← All demos</a>
     <div class="eyebrow" id="eyebrow">Prototype · pilot items</div>
-    <h1>Illusory Ribbons 3D</h1>
+    <h1 id="title">Illusory Ribbons 3D</h1>
     <p>The pilot challenges as a site would show them. Your answers stay in this page; the summary after the last one shows what you missed.</p>
   </header>
 
   <section class="widget" id="widget" aria-label="CAPTCHA challenge">
     <div class="band">
       <strong id="prompt"></strong>
-      <span>Watch the camera swing round the tubes, then tap how many loops there are and press Verify.</span>
+      <span id="instruction">Watch the camera swing round the tubes, then tap how many loops there are and press Verify.</span>
     </div>
     <div class="player">
       <canvas id="canvas" aria-label="Animation: a camera swings round grey tubes that cross each other"></canvas>
@@ -163,7 +163,7 @@ textarea { width: 100%; min-height: 120px; font-family: var(--font-mono); font-s
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Item</th><th>Your answer</th><th>Loops</th><th>Time</th><th></th></tr></thead>
+        <thead><tr><th>Item</th><th>Your answer</th><th id="collab">Loops</th><th>Time</th><th></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
@@ -186,7 +186,15 @@ const $ = (id) => document.getElementById(id);
 const canvas = $("canvas"), ctx = canvas.getContext("2d");
 canvas.width = FW; canvas.height = FH;
 $("prompt").textContent = CONFIG.prompt;
-$("eyebrow").textContent = "Prototype · pilot items " + ITEMS[0].id.slice(4) + " to " + ITEMS[ITEMS.length - 1].id.slice(4);
+// optional words (a version of the type, e.g. rings): title, instruction, answer label, results column
+const TEXT = CONFIG.text || {};
+if (TEXT.title) { document.title = TEXT.title + " Pilot"; $("title").textContent = TEXT.title; }
+if (TEXT.instruction) $("instruction").textContent = TEXT.instruction;
+if (TEXT.answer) $("numlab").textContent = TEXT.answer;
+if (TEXT.column) $("collab").textContent = TEXT.column;
+if (TEXT.picture) $("canvas").setAttribute("aria-label", TEXT.picture);
+const shortId = (id) => id.slice(id.indexOf("_") + 1);   // the id after its prefix (orb_, orb2_, ...)
+$("eyebrow").textContent = "Prototype · pilot items " + shortId(ITEMS[0].id) + " to " + shortId(ITEMS[ITEMS.length - 1].id);
 $("scrub").max = FRAMES - 1;
 $("nums").innerHTML = OPTIONS.map((n) =>
   '<button class="num" type="button" data-n="' + n + '" aria-pressed="false" id="n' + n + '">' + n + "</button>").join("");

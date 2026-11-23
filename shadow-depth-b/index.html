@@ -214,7 +214,8 @@ const $ = (id) => document.getElementById(id);
 const canvas = $("canvas"), ctx = canvas.getContext("2d");
 canvas.width = FW; canvas.height = FH;
 $("prompt").textContent = CONFIG.prompt;
-$("eyebrow").textContent = "Prototype · pilot items " + ITEMS[0].id.slice(4) + " to " + ITEMS[ITEMS.length - 1].id.slice(4);
+const shortId = (id) => id.slice(id.indexOf("_") + 1);   // the id after its prefix (orb_, orb2_, ...)
+$("eyebrow").textContent = "Prototype · pilot items " + shortId(ITEMS[0].id) + " to " + shortId(ITEMS[ITEMS.length - 1].id);
 $("scrub").max = FRAMES - 1;
 // one frame (a still picture, Sun Shadows): no play button, no slider; the picture described by TEXT.picture
 if (FRAMES === 1) { $("playbtn").hidden = true; document.querySelector(".scrub").hidden = true; }

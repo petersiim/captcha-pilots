@@ -55,6 +55,12 @@ details b { color: var(--ink); }
 .docs .date { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 a:focus-visible, summary:focus-visible { outline: 3px solid var(--lamp); outline-offset: 2px; }
 @media (max-width: 700px) { .card { grid-template-columns: 1fr; } .card img.poster { height: auto; } }
+[hidden] { display: none !important; }
+.tabbed { display: flex; flex-direction: column; gap: 16px; }
+.tabs { display: flex; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+.tabs a { text-decoration: none; padding: 8px 2px; font-weight: 700; font-size: 18px; color: var(--muted);
+          border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.tabs a[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--lamp); }
 </style>
 </head>
 <body>
@@ -62,11 +68,40 @@ a:focus-visible, summary:focus-visible { outline: 3px solid var(--lamp); outline
   <header>
     <div class="eyebrow">MSc thesis · Can You See What AI Can't?</div>
     <h1>Pilot CAPTCHAs</h1>
-    <p>Our 13 pilot types, 6 example items each, played as a site would show them, with a timer. After a wrong
-    answer the page marks the right one; at the end it shows a summary with Copy results (JSON). These are each type's
-    example items, not the ones the models are asked.</p>
+    <p>Our pilot types, 6 example items each, played as a site would show them, with a timer. After a wrong answer
+    the page marks the right one; at the end it shows a summary with Copy results (JSON). These are each type's example
+    items, not the ones the models are asked (Illusory Ribbons 3D v4: 20 example items; Which stick is free: its
+    10 photos are all there are).</p>
+    <p>Illusory Ribbons 3D and Dot Layers have versions beside the first; each card says what changed.</p>
   </header>
   <section>
+    <article class="card">
+      <a href="ribbons-3d/index.html"><img class="poster" src="ribbons-3d/poster.jpg" alt="Grey tubes that cross each other"></a>
+      <div class="body">
+        <h3>Illusory Ribbons 3D</h3>
+        <div class="task">How many separate closed loops are there? Each loop is one tube that closes on itself; the loops pass in front of and behind each other but never touch.</div>
+        <p>Grey tubes that cross in every view; the camera swings round them. v2: 2 to 8 plainer loops, thicker tubes, gentle waves. v3: 2 to 8 rings instead of tubes: nothing to follow. v4: a new question: how many thin rings are linked with the thick one, 0 to 3. The tubes are flat and covered in dots, so a still picture does not show which ring is in front where two cross; only the motion does. v6: four v4 pictures in a 2 x 2 grid: tap every picture in which exactly 1 (or 2) thin rings are linked with the thick ring. v5.3: v5.2 with 4 thin rings in every picture, 0 to 4 of them linked. v7.3: the grid with four v5.3 pictures. v5.4: v5.3 with 3 thin rings in every picture, 0 to 3 of them linked. v7.4: the grid with four v5.4 pictures.</p>
+        <div class="links"><a class="btn" href="ribbons-3d/index.html">Play v1</a><a class="small" href="ribbons-3d-v4/index.html">Play v2</a><a class="small" href="ribbons-3d-v5/index.html">Play v3</a><a class="small" href="ribbons-3d-v6/index.html">Play v4</a><a class="small" href="ribbons-3d-v8/index.html">Play v6</a><a class="small" href="ribbons-3d-v12/index.html">Play v5.3</a><a class="small" href="ribbons-3d-v13/index.html">Play v7.3</a><a class="small" href="ribbons-3d-v14/index.html">Play v5.4</a><a class="small" href="ribbons-3d-v15/index.html">Play v7.4</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="dot-layers/index.html"><img class="poster" src="dot-layers/poster.jpg" alt="A field of grey dots"></a>
+      <div class="body">
+        <h3>Dot Layers</h3>
+        <div class="task">Which shape is in front, not covered by any other shape?</div>
+        <p>Five shapes made only of dots slide over each other; every single frame is plain dots. Only the motion shows the shapes and which covers which. v1.2: v1 with more, smaller dots (the same scenes), so the edges show finer. v1.3: v1 without the jitter: each shape&#x27;s dots move in lockstep (the same scenes). v2: invented shapes, one of each kind in every item: a simple shape, a tetris block, a blob, joined parts and a letter; the five shapes are the answers. v2.2: v2 with more, smaller dots (the same scenes), so the edges show finer. v2.3: v2 without the jitter: each shape&#x27;s dots move in lockstep (the same scenes). v2.4: v2.3, and each shape its own motion (a circle, an ellipse, a sweep, a figure eight or turning in place, small to large), the background still. v2.5: v2.3 with short-lived dots: each lives half a second, then shows at a new place in its shape (the same scenes). v1.2 2x2: four v1.2 pictures in a 2 x 2 grid: tap every picture in which the named shape (the square, the heart, ...) is in front; it is in every picture. v1.2 3x3: nine v1.2 pictures in a 3 x 3 grid, the same question. v1.3 2x2: the 2 x 2 grid with four v1.3 pictures. v1.3 3x3: the 3 x 3 grid with nine v1.3 pictures.</p>
+        <div class="links"><a class="btn" href="dot-layers/index.html">Play v1</a><a class="small" href="dot-layers-v4/index.html">Play v1.2</a><a class="small" href="dot-layers-v9/index.html">Play v1.3</a><a class="small" href="dot-layers-v3/index.html">Play v2</a><a class="small" href="dot-layers-v5/index.html">Play v2.2</a><a class="small" href="dot-layers-v6/index.html">Play v2.3</a><a class="small" href="dot-layers-v7/index.html">Play v2.4</a><a class="small" href="dot-layers-v8/index.html">Play v2.5</a><a class="small" href="dot-layers-v10/index.html">Play v1.2 2x2</a><a class="small" href="dot-layers-v11/index.html">Play v1.2 3x3</a><a class="small" href="dot-layers-v12/index.html">Play v1.3 2x2</a><a class="small" href="dot-layers-v13/index.html">Play v1.3 3x3</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="mikado-web/index.html"><img class="poster" src="mikado-web/poster.jpg" alt="A pile of pick-up sticks, some with a number at one end"></a>
+      <div class="body">
+        <h3>Which stick is free?</h3>
+        <div class="task">Tap every numbered stick you could lift without moving another stick.</div>
+        <p>Pick-up sticks on 10 freely licensed photos from the web, each credited on its page. A stick is free when no other stick lies on it, so every crossing of it has to be read front or behind.</p>
+        <div class="links"><a class="btn" href="mikado-web/index.html">Play</a></div>
+      </div>
+    </article>
     <article class="card">
       <a href="orbit-shadows/index.html"><img class="poster" src="orbit-shadows/poster.jpg" alt="Objects on a table, a lamp on a post"></a>
       <div class="body">
@@ -74,33 +109,6 @@ a:focus-visible, summary:focus-visible { outline: 3px solid var(--lamp); outline
         <div class="task">Select every object whose shadow does not fit the lamp.</div>
         <p>A camera swings round a table with numbered objects and a lamp. One to three shadows are wrong.</p>
         <div class="links"><a class="btn" href="orbit-shadows/index.html">Play</a></div>
-      </div>
-    </article>
-    <article class="card">
-      <a href="ribbons-3d/index.html"><img class="poster" src="ribbons-3d/poster.jpg" alt="Grey tubes that cross each other"></a>
-      <div class="body">
-        <h3>Illusory Ribbons 3D</h3>
-        <div class="task">How many separate closed loops are there? Each loop is one tube that closes on itself; the loops pass in front of and behind each other but never touch.</div>
-        <p>Grey tubes that cross in every view; the camera swings round them. v2: 2 to 8 plainer loops, thicker tubes, gentle waves. v3: 2 to 8 rings instead of tubes: nothing to follow. v4: a new question: how many thin rings are linked with the thick one, 0 to 3. The tubes are flat and covered in dots, so a still picture does not show which ring is in front where two cross; only the motion does (20 example items). v6: four v4 pictures in a 2 x 2 grid: tap every picture in which exactly 1 (or 2) thin rings are linked with the thick ring. v5.3: always 4 thin rings, 0 to 4 of them linked; every thin ring passes the thick one within a hair, linked or not, bends a little and has its own size; each item its own colours, kept in clear contrast. v7.3: the same grid with four v5.3 pictures. v5.4: v5.3 with 3 thin rings, 0 to 3 of them linked. v7.4: the same grid with four v5.4 pictures.</p>
-        <div class="links"><a class="btn" href="ribbons-3d/index.html">Play v1</a><a class="small" href="ribbons-3d-v4/index.html">Play v2</a><a class="small" href="ribbons-3d-v5/index.html">Play v3</a><a class="small" href="ribbons-3d-v6/index.html">Play v4</a><a class="small" href="ribbons-3d-v8/index.html">Play v6</a><a class="small" href="ribbons-3d-v12/index.html">Play v5.3</a><a class="small" href="ribbons-3d-v13/index.html">Play v7.3</a><a class="small" href="ribbons-3d-v14/index.html">Play v5.4</a><a class="small" href="ribbons-3d-v15/index.html">Play v7.4</a></div>
-      </div>
-    </article>
-    <article class="card">
-      <a href="ribbons-static/index.html"><img class="poster" src="ribbons-static/poster.jpg" alt="A glass box with three tubes, seen from the front"></a>
-      <div class="body">
-        <h3>Illusory Ribbons Static</h3>
-        <div class="task">The first picture shows a glass box with tubes, seen from the front. Select every numbered picture that shows the same box from the right, the left, above, below or behind.</div>
-        <p>One front view of tubes in a box, 4 candidate views: the wrong ones show the mirrored box or two tubes with traded thickness. No motion.</p>
-        <div class="links"><a class="btn" href="ribbons-static/index.html">Play</a></div>
-      </div>
-    </article>
-    <article class="card">
-      <a href="motion-shadows-b/index.html"><img class="poster" src="motion-shadows-b/poster.jpg" alt="Objects on a turntable, two groups of shadows"></a>
-      <div class="body">
-        <h3>Motion Shadows A to D</h3>
-        <div class="task">Select every object whose shadow turns with the table.</div>
-        <p>Two hidden lights, each object lit by one. One frame shows two groups of shadows that both look right; only the motion tells which light moves. A: The camera swings round the table; one hidden light stays in the room, the other travels with the camera. B: The camera stands still and a turntable swings; one hidden light stays in the room, the other turns with the table. C: As B, but the room light moves too, the other way round, so no shadow keeps its direction on the screen. D: The camera swings as in A; one hidden light stays in the room, the other drifts through it, with the camera or against it, so every shadow turns on the screen.</p>
-        <div class="links"><a class="btn" href="motion-shadows-a/index.html">Play A</a><a class="small" href="motion-shadows-b/index.html">Play B</a><a class="small" href="motion-shadows-c/index.html">Play C</a><a class="small" href="motion-shadows-d/index.html">Play D</a></div>
       </div>
     </article>
     <article class="card">
@@ -122,21 +130,30 @@ a:focus-visible, summary:focus-visible { outline: 3px solid var(--lamp); outline
       </div>
     </article>
     <article class="card">
-      <a href="dot-layers/index.html"><img class="poster" src="dot-layers/poster.jpg" alt="A field of grey dots"></a>
+      <a href="will-it-fall/index.html"><img class="poster" src="will-it-fall/poster.jpg" alt="A stack of wooden pieces, cardboard boxes and iron blocks on a table"></a>
       <div class="body">
-        <h3>Dot Layers</h3>
-        <div class="task">Which shape is in front, not covered by any other shape?</div>
-        <p>Five shapes made only of dots slide over each other; every single frame is plain dots. Only the motion shows the shapes and which covers which.</p>
-        <div class="links"><a class="btn" href="dot-layers/index.html">Play</a></div>
+        <h3>Will it fall?</h3>
+        <div class="task">Will this stack fall over?</div>
+        <p>Stacks of wood, empty cardboard and iron; the shapes or the weights decide. Also as four stacks at once: tap every stack that falls.</p>
+        <div class="links"><a class="btn" href="will-it-fall/index.html">Play</a><a class="small" href="will-it-fall-grid/index.html">Play four stacks</a></div>
       </div>
     </article>
     <article class="card">
-      <a href="photo-motion/index.html"><img class="poster" src="photo-motion/poster.jpg" alt="A camera swings round a desk with five numbered balls"></a>
+      <a href="who-pushed/index.html"><img class="poster" src="who-pushed/poster.jpg" alt="Three lanes; in each a wooden block slides into a ball"></a>
       <div class="body">
-        <h3>Photo Motion</h3>
-        <div class="task">Select every object whose shadow fits a light that stays still in the room.</div>
-        <p>Motion Shadows D along a real camera path, inserted into a real scene (TUM RGB-D).</p>
-        <div class="links"><a class="btn" href="photo-motion/index.html">Play</a></div>
+        <h3>Who pushed whom?</h3>
+        <div class="task">In which lane does the block push the ball?</div>
+        <p>Three lanes; in one the block pushes the ball, in the others the ball starts 0.4 to 0.8 s after the touch. The clip plays once on Play, with Replay.</p>
+        <div class="links"><a class="btn" href="who-pushed/index.html">Play</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <a href="impossible-event/index.html"><img class="poster" src="impossible-event/poster.jpg" alt="Four lanes; in each a ball rolls past a screen, a ledge or a ramp"></a>
+      <div class="body">
+        <h3>Impossible event?</h3>
+        <div class="task">In which lane does something impossible happen?</div>
+        <p>Four lanes; in one the ball vanishes, teleports, floats, bounces higher or stops on a slope. The clip plays once on Play, with Replay.</p>
+        <div class="links"><a class="btn" href="impossible-event/index.html">Play</a></div>
       </div>
     </article>
   </section>

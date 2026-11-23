@@ -64,6 +64,7 @@ header p { margin: 0; color: var(--muted); max-width: 62ch; }
        color: var(--ink); font: 700 20px var(--font-ui); cursor: pointer; display: flex; flex-direction: column;
        align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; }
 .opt svg { width: 30px; height: 30px; fill: currentColor; }
+.opt img { width: 56px; height: 56px; display: block; border-radius: 4px; }
 /* options that are words (an action name): wider buttons, smaller type */
 .opts.words { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); }
 .opts.words .opt { font-size: 16px; }
@@ -184,14 +185,17 @@ textarea { width: 100%; min-height: 120px; font-family: var(--font-mono); font-s
 
 <script>
 const CONFIG = {"items": [{"id": "sda_8201", "truth": 3, "note": "lowest in the picture 5, highest 1"}, {"id": "sda_8202", "truth": 2, "note": "lowest in the picture 1, highest 3"}, {"id": "sda_8203", "truth": 1, "note": "lowest in the picture 5, highest 4"}, {"id": "sda_8204", "truth": 1, "note": "lowest in the picture 5, highest 4"}, {"id": "sda_8205", "truth": 4, "note": "lowest in the picture 5, highest 3"}, {"id": "sda_8206", "truth": 5, "note": "lowest in the picture 1, highest 3"}], "options": [{"value": 1, "label": "1"}, {"value": 2, "label": "2"}, {"value": 3, "label": "3"}, {"value": 4, "label": "4"}, {"value": 5, "label": "5"}], "frames": 1, "cols": 1, "w": 448, "h": 336, "fps": 1, "loop": [0], "prompt": "Which ball is nearest to you?", "text": {"title": "Shadow Depth A", "instruction": "Tap the ball nearest to you. Then press Verify.", "answer": "The ball nearest to you", "note": "Picture only", "picture": "A room with five numbered balls floating in front of the back wall"}};
-// items: [{id, truth, note?, options?, src?}]; options: [{value, label, svg?}] (svg: points of a polygon in a 0-32
-// box); an item's own options replace CONFIG.options while it shows (MVCAP: six action names per item);
+// items: [{id, truth, note?, options?, src?}]; options: [{value, label, svg?, img?}] (svg: points of a polygon in a
+// 0-32 box; img: a picture's path, Dot Layers v3's shapes); an item's own options replace CONFIG.options while it
+// shows (MVCAP: six action names per item);
 // frames 1 = a still picture (no player controls); otherwise the page plays CONFIG.loop at CONFIG.fps;
-// CONFIG.video: each item plays its own video file (src, looped, muted) instead of a sprite
+// CONFIG.video: each item plays its own video file (src, looped, muted) instead of a sprite;
+// CONFIG.once (18 Nov, the intuitive physics clips; WCAG 2.2.2): nothing moves until Play is tapped, the clip then plays
+// once and stops on its last frame, and the button replays it
 const ITEMS = CONFIG.items, TEXT = CONFIG.text;
 let OPTIONS = CONFIG.options;
 const FRAMES = CONFIG.frames, COLS = CONFIG.cols, FW = CONFIG.w, FH = CONFIG.h, FPS = CONFIG.fps, LOOP = CONFIG.loop;
-const STILL = FRAMES === 1, VIDEO = !!CONFIG.video;
+const STILL = FRAMES === 1, VIDEO = !!CONFIG.video, ONCE = !!CONFIG.once;
 
 const $ = (id) => document.getElementById(id);
 const canvas = $("canvas"), ctx = canvas.getContext("2d"), video = $("video");
@@ -205,16 +209,18 @@ $("prompt").textContent = CONFIG.prompt;
 $("instruction").textContent = TEXT.instruction;
 $("optlab").textContent = TEXT.answer;
 $("notecol").textContent = TEXT.note || "Note";
-$("eyebrow").textContent = "Prototype · pilot items " + ITEMS[0].id.slice(4) + " to " + ITEMS[ITEMS.length - 1].id.slice(4);
+const shortId = (id) => id.slice(id.indexOf("_") + 1);   // the id after its prefix (orb_, orb2_, ...)
+$("eyebrow").textContent = "Prototype · pilot items " + shortId(ITEMS[0].id) + " to " + shortId(ITEMS[ITEMS.length - 1].id);
 $("scrub").max = FRAMES - 1;
 $("playbtn").hidden = STILL; $("scrubrow").hidden = STILL || VIDEO;
 function renderOptions(list) {
   OPTIONS = list;
-  $("opts").classList.toggle("words", list.some((o) => !o.svg && String(o.label).length > 3));
+  $("opts").classList.toggle("words", list.some((o) => !o.svg && !o.img && String(o.label).length > 3));
   $("opts").innerHTML = list.map((o, i) =>
     '<button class="opt" type="button" data-i="' + i + '" aria-pressed="false" aria-label="' + o.label + '">' +
     (o.svg ? '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="' + o.svg + '"/></svg><small>' + o.label + "</small>"
-           : o.label) + "</button>").join("");
+     : o.img ? '<img src="' + o.img + '" alt=""><small>' + o.label + "</small>"
+     : o.label) + "</button>").join("");
   document.querySelectorAll(".opt").forEach((b) => b.addEventListener("click", () => {
     if (done) return;
     const on = b.getAttribute("aria-pressed") !== "true";
@@ -222,10 +228,13 @@ function renderOptions(list) {
     b.setAttribute("aria-pressed", on ? "true" : "false");
     $("verify").disabled = chosen() === null;
   }));
-  $("hint").textContent = "Keys: 1 to " + list.length + " select, Enter verifies" + (STILL ? "." : ", P pauses.");
+  $("hint").textContent = "Keys: 1 to " + list.length + " select, Enter verifies" +
+    (STILL ? "." : ONCE ? ", P plays." : ", P pauses.");
 }
 const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-let idx = 0, frame = 0, step = 0, playing = !reduce, acc = 0, last = 0, img = null, start = 0, done = false, results = [];
+let idx = 0, frame = 0, step = 0, playing = !reduce && !ONCE, acc = 0, last = 0, img = null, start = 0, done = false,
+  results = [];
+let ended = false;   // CONFIG.once: the clip has played to its end
 const cache = {};
 
 function sprite(i) {
@@ -240,17 +249,22 @@ function draw() {
   $("frameout").textContent = "Frame " + (frame + 1) + " of " + FRAMES;
 }
 function setPlaying(p) {
+  if (ONCE && p && ended) { ended = false; step = 0; frame = LOOP[0]; draw(); }
   playing = p && !STILL;
   if (VIDEO) { if (playing) video.play().catch(() => {}); else video.pause(); }
-  $("playtext").textContent = playing ? "Pause" : "Play";
-  $("playbtn").setAttribute("aria-label", playing ? "Pause animation" : "Play animation");
+  const replay = ONCE && ended && !playing;
+  $("playtext").textContent = playing ? "Pause" : replay ? "Replay" : "Play";
+  $("playbtn").setAttribute("aria-label", playing ? "Pause animation" : replay ? "Replay animation" : "Play animation");
   $("playicon").innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
   last = 0; acc = 0;
 }
 function tick(t) {
   if (playing && img && img.complete && img.naturalWidth) {
     if (last) acc += t - last;
-    while (acc >= 1000 / FPS) { step = (step + 1) % LOOP.length; frame = LOOP[step]; acc -= 1000 / FPS; }
+    while (playing && acc >= 1000 / FPS) {
+      if (ONCE && step === LOOP.length - 1) { ended = true; setPlaying(false); break; }
+      step = (step + 1) % LOOP.length; frame = LOOP[step]; acc -= 1000 / FPS;
+    }
     draw();
   }
   last = playing ? t : 0;
@@ -265,7 +279,7 @@ function chosen() {
   return b ? OPTIONS[+b.dataset.i].value : null;
 }
 function load(i) {
-  idx = i; frame = 0; step = 0; done = false; start = 0;
+  idx = i; frame = 0; step = 0; done = false; start = 0; ended = false;
   if (ITEMS[i].options) renderOptions(ITEMS[i].options);
   document.querySelectorAll(".opt").forEach((b) => {
     b.setAttribute("aria-pressed", "false"); b.disabled = false; b.classList.remove("truth", "miss");
@@ -286,7 +300,7 @@ function load(i) {
   img = sprite(i);
   $("loading").hidden = img.complete && img.naturalWidth > 0;
   const ready = () => {
-    $("loading").hidden = true; start = performance.now(); setPlaying(!reduce); draw();
+    $("loading").hidden = true; start = performance.now(); setPlaying(ONCE ? false : !reduce); draw();
     if (i + 1 < ITEMS.length) sprite(i + 1);
   };
   if (img.complete && img.naturalWidth) ready(); else img.onload = ready;
@@ -338,7 +352,7 @@ function finish() {
   $("sMedian").textContent = median.toFixed(1) + " s";
   $("rows").innerHTML = results.map((r) => {
     const pill = r.skipped ? '<span class="pill skip">skipped</span>' : r.correct ? '<span class="pill ok">solved</span>' : '<span class="pill bad">missed</span>';
-    return "<tr><td class=\"mono\">" + r.id.slice(4) + "</td><td>" + r.answer_label +
+    return "<tr><td class=\"mono\">" + shortId(r.id) + "</td><td>" + r.answer_label +
       "</td><td>" + r.truth_label + "</td><td>" + r.note + "</td><td class=\"mono\">" + r.seconds.toFixed(1) + " s</td><td>" + pill + "</td></tr>";
   }).join("");
   $("json").value = JSON.stringify({ finished: new Date().toISOString(), results }, null, 1);
