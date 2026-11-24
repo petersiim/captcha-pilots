@@ -11,7 +11,8 @@
    tapped on the animation itself or on the buttons below, the answer a set of pictures. Made by make_demos.py from
    code/playground/demos/ribbons_grid_widget.html. Since 18 Nov also Dot Layers' grids: CONFIG.side (2 or 3 pictures a
    side), CONFIG.maxw (the page's width), the texts in CONFIG.text, and items that ask for a named shape in front
-   (shape, fronts) instead of a count (k, counts). */
+   (shape, fronts) instead of a count (k, counts). Since 24 Nov also the papers' own grids (make_demos.paper_examples):
+   CONFIG.text.eyebrow, lead and select replace the pilot's words; beyond 9 cells the number keys are not offered. */
 :root {
   --bg: #eceef2; --surface: #ffffff; --surface-2: #f5f6f8; --ink: #141922; --muted: #586071; --line: #d4d8e0;
   --band: #1b2130; --band-ink: #f2f4f8; --lamp: #e3a21c; --lamp-ink: #2e2000; --ok: #1b7a4c; --bad: #b3261e;
@@ -126,7 +127,7 @@ textarea { width: 100%; min-height: 120px; font-family: var(--font-mono); font-s
     <a class="back" href="../index.html">← All demos</a>
     <div class="eyebrow" id="eyebrow">Prototype · pilot items</div>
     <h1 id="title">Illusory Ribbons 3D</h1>
-    <p>The pilot challenges as a site would show them. Your answers stay in this page; the summary after the last one shows what you missed.</p>
+    <p id="lead">The pilot challenges as a site would show them. Your answers stay in this page; the summary after the last one shows what you missed.</p>
   </header>
 
   <section class="widget" id="widget" aria-label="CAPTCHA challenge">
@@ -202,7 +203,9 @@ const $ = (id) => document.getElementById(id);
 const canvas = $("canvas"), ctx = canvas.getContext("2d");
 canvas.width = FW; canvas.height = FH;
 const TEXT = CONFIG.text || {};
-if (TEXT.title) { document.title = TEXT.title + " Pilot"; $("title").textContent = TEXT.title; }
+if (TEXT.title) { document.title = TEXT.title + (TEXT.eyebrow ? "" : " Pilot"); $("title").textContent = TEXT.title; }
+if (TEXT.lead) $("lead").textContent = TEXT.lead;
+if (TEXT.select) $("numlab").textContent = TEXT.select;
 // (18 Nov) Dot Layers' grids: the page's width, the texts, the pictures a side
 if (CONFIG.maxw) document.querySelector(".wrap").style.maxWidth = CONFIG.maxw + "px";
 if (TEXT.instruction) $("instruction").textContent = TEXT.instruction;
@@ -216,12 +219,14 @@ if (SIDE !== 2) {
   $("hint").textContent = "Keys: 1 to " + PICS.length + " select, Enter verifies, P pauses.";
 }
 const shortId = (id) => id.slice(id.indexOf("_") + 1);   // the id after its prefix (r3d8_, r3d9_)
-$("eyebrow").textContent = "Prototype · pilot items " + shortId(ITEMS[0].id) + " to " + shortId(ITEMS[ITEMS.length - 1].id);
+$("eyebrow").textContent = TEXT.eyebrow ||
+  "Prototype · pilot items " + shortId(ITEMS[0].id) + " to " + shortId(ITEMS[ITEMS.length - 1].id);
 $("scrub").max = FRAMES - 1;
 if (STILL) {
   $("playbtn").hidden = true; document.querySelector(".scrub").hidden = true;
   $("hint").textContent = "Keys: 1 to " + PICS.length + " select, Enter verifies.";
 }
+if (PICS.length > 9) $("hint").textContent = STILL ? "Keys: Enter verifies." : "Keys: Enter verifies, P pauses.";
 $("nums").innerHTML = PICS.map((n) =>
   '<button class="num" type="button" data-n="' + n + '" aria-pressed="false" id="n' + n + '">' + n + "</button>").join("");
 $("cells").innerHTML = PICS.map((n) =>
@@ -375,7 +380,7 @@ $("again").addEventListener("click", () => {
 });
 document.addEventListener("keydown", (e) => {
   if ($("widget").hidden || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-  if (/^[1-9]$/.test(e.key) && +e.key <= PICS.length) { toggle(+e.key); e.preventDefault(); }
+  if (/^[1-9]$/.test(e.key) && +e.key <= PICS.length && PICS.length <= 9) { toggle(+e.key); e.preventDefault(); }
   else if (e.key === "Enter" && !$("verify").disabled) { verify(); e.preventDefault(); }
   else if ((e.key === "p" || e.key === "P") && !STILL) { setPlaying(!playing); }
 });
