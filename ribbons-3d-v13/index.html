@@ -12,7 +12,8 @@
    code/playground/demos/ribbons_grid_widget.html. Since 18 Nov also Dot Layers' grids: CONFIG.side (2 or 3 pictures a
    side), CONFIG.maxw (the page's width), the texts in CONFIG.text, and items that ask for a named shape in front
    (shape, fronts) instead of a count (k, counts). Since 24 Nov also the papers' own grids (make_demos.paper_examples):
-   CONFIG.text.eyebrow, lead and select replace the pilot's words; beyond 9 cells the number keys are not offered. */
+   CONFIG.text.eyebrow, lead and select replace the pilot's words; beyond 9 cells the number keys are not offered.
+   Since 25 Nov Dot Layers' one-shape grids: an item's target (a picture of the shape to find) shows in the band. */
 :root {
   --bg: #eceef2; --surface: #ffffff; --surface-2: #f5f6f8; --ink: #141922; --muted: #586071; --line: #d4d8e0;
   --band: #1b2130; --band-ink: #f2f4f8; --lamp: #e3a21c; --lamp-ink: #2e2000; --ok: #1b7a4c; --bad: #b3261e;
@@ -48,6 +49,7 @@ header p { margin: 0; color: var(--muted); max-width: 62ch; }
 .band { background: var(--band); color: var(--band-ink); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
 .band strong { font-size: 19px; line-height: 1.25; text-wrap: balance; }
 .band span { font-size: 14px; opacity: 0.82; }
+.band img { width: 112px; height: 112px; border-radius: 8px; background: #fff; }
 .player { position: relative; background: #000; aspect-ratio: 1 / 1; max-width: 100%; }
 .player canvas { display: block; width: 100%; height: 100%; }
 .player .loading { position: absolute; inset: 0; display: grid; place-items: center; color: #cfd4de;
@@ -133,6 +135,7 @@ textarea { width: 100%; min-height: 120px; font-family: var(--font-mono); font-s
   <section class="widget" id="widget" aria-label="CAPTCHA challenge">
     <div class="band">
       <strong id="prompt"></strong>
+      <img id="target" alt="The shape to find" hidden>
       <span id="instruction">Watch the camera swing round the rings in all four pictures, tap every picture that fits and press Verify.</span>
     </div>
     <div class="player">
@@ -283,6 +286,8 @@ function load(i) {
     b.setAttribute("aria-pressed", "false"); b.disabled = false; b.classList.remove("truth", "miss");
   });
   $("prompt").textContent = ITEMS[i].prompt;
+  $("target").hidden = !ITEMS[i].target;
+  if (ITEMS[i].target) $("target").src = ITEMS[i].target;
   $("verify").textContent = "Verify"; $("verify").disabled = true;
   $("result").hidden = true; $("skip").disabled = false;
   $("counter").textContent = (i + 1) + " / " + ITEMS.length;

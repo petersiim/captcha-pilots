@@ -207,6 +207,11 @@ $id("title").textContent = TEXT.title; $id("numlab").textContent = TEXT.answer; 
 $id("falselab").textContent = TEXT.false; $id("collab").textContent = TEXT.column;
 $id("instruction").textContent = TEXT.instruction;
 function $id(id) { return document.getElementById(id); }
+// (26 Nov) fewer than five objects (Orbit Shadows v4 has four): the spare buttons go
+const N_OBJ = CONFIG.objects || 5;
+for (let n = N_OBJ + 1; n <= 5; n++) $id("n" + n).remove();
+document.querySelector(".nums").style.gridTemplateColumns = "repeat(" + N_OBJ + ", 1fr)";
+document.querySelector(".hint").textContent = "Keys: 1 to " + N_OBJ + " select, Enter verifies, P pauses.";
 // the camera positions along the swing; the page plays them forth, holds, back, holds (orbit_shadows.loop_order)
 const FRAMES = CONFIG.frames, COLS = CONFIG.cols, FW = CONFIG.w, FH = CONFIG.h, FPS = CONFIG.fps, LOOP = CONFIG.loop;
 
@@ -363,7 +368,7 @@ $("again").addEventListener("click", () => {
 });
 document.addEventListener("keydown", (e) => {
   if ($("widget").hidden || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-  if (/^[1-5]$/.test(e.key)) { $("n" + e.key).click(); e.preventDefault(); }
+  if (/^[1-5]$/.test(e.key) && $("n" + e.key)) { $("n" + e.key).click(); e.preventDefault(); }
   else if (e.key === "Enter" && !$("verify").disabled) { verify(); e.preventDefault(); }
   else if (e.key === "p" || e.key === "P") { setPlaying(!playing); }
 });
